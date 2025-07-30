@@ -1,6 +1,7 @@
 // app/api/[transport]/route.ts
 import { createMcpHandler } from 'mcp-handler'
 import { z } from 'zod'
+
 const handler = createMcpHandler(
   (server) => {
     server.tool(
@@ -28,4 +29,15 @@ const handler = createMcpHandler(
     verboseLogs: true,
   },
 )
-export { handler as GET, handler as POST }
+
+const GET = (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
+  console.log(params)
+  return handler(req)
+}
+
+const POST = (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
+  console.log(params)
+  return handler(req)
+}
+
+export { GET, POST }
