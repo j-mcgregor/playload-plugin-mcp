@@ -9,7 +9,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import fastify from 'fastify'
 import { z } from 'zod'
 
-const getServer = (payload: BasePayload) => {
+export const getServer = (payload: BasePayload) => {
   // console.error(payload.collections)
   // Create an MCP server with implementation details
   const server = new McpServer(
@@ -37,7 +37,6 @@ const getServer = (payload: BasePayload) => {
     'greeting-template',
     'A simple greeting prompt template',
     {
-      // @ts-expect-error - zod types are not compatible with mcp-server types
       name: z.string().describe('Name to include in greeting'),
     },
     async ({ name }: { name: string }): Promise<GetPromptResult> => {

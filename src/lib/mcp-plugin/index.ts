@@ -1,6 +1,7 @@
 import type { CollectionSlug, Config } from 'payload'
 
-import { startEmbeddedServer } from './server'
+// import { startEmbeddedServer } from './server'
+import { POST, GET, DELETE } from './endpoints'
 
 export type PayloadPluginMcpTestConfig = {
   /**
@@ -63,9 +64,29 @@ export const payloadPluginMcpTest =
     }
 
     // config.endpoints.push({
-    //   handler: customEndpointHandler,
+    //   handler: (req) => {
+    //     return new Response('Hello, world!')
+    //   },
     //   method: 'get',
-    //   path: '/my-plugin-endpoint',
+    //   path: '/test',
+    // })
+
+    // config.endpoints.push({
+    //   handler: POST,
+    //   method: 'post',
+    //   path: '/mcp',
+    // })
+
+    // config.endpoints.push({
+    //   handler: GET,
+    //   method: 'get',
+    //   path: '/mcp',
+    // })
+
+    // config.endpoints.push({
+    //   handler: DELETE,
+    //   method: 'delete',
+    //   path: '/mcp',
     // })
 
     const incomingOnInit = config.onInit
@@ -77,11 +98,11 @@ export const payloadPluginMcpTest =
       }
 
       // Start MCP server based on configuration
-      const mcpConfig = pluginOptions.mcp || { type: 'embedded' }
+      // const mcpConfig = pluginOptions.mcp || { type: 'embedded' }
 
-      if (mcpConfig.type === 'embedded') {
-        await startEmbeddedServer(payload)
-      }
+      // if (mcpConfig.type === 'embedded') {
+      //   await startEmbeddedServer(payload)
+      // }
     }
 
     return config
