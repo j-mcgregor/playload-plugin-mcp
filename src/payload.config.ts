@@ -35,9 +35,8 @@ export default buildConfig({
   plugins: [
     payloadCloudPlugin(),
     payloadPluginMcpTest({
-      mcp: {
-        type: 'embedded',
-      },
+      collections: 'all',
+      apiKey: process.env.MCP_API_KEY || '',
     }),
     // storage-adapter-placeholder
   ],

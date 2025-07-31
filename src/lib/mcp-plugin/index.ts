@@ -1,52 +1,34 @@
-import type { CollectionSlug, Config } from 'payload'
+import type { Config } from 'payload'
 import { handler } from './mcp'
-
-export type PayloadPluginMcpTestConfig = {
-  /**
-   * List of collections to add a custom field
-   */
-  collections?: Partial<Record<CollectionSlug, true>>
-  disabled?: boolean
-  /**
-   * MCP server configuration
-   */
-  mcp?: {
-    /**
-     * API key for authentication
-     */
-    apiKey?: string
-    /**
-     * Output path for MCP config file
-     */
-    configPath?: string
-    /**
-     * PayloadCMS URL for API access
-     */
-    payloadUrl?: string
-    /**
-     * Port for sidecar server (ignored for embedded)
-     */
-    port?: number
-    /**
-     * Server type: 'embedded' (runs within Payload process) or 'sidecar' (runs as separate executable)
-     */
-    type: 'embedded' | 'sidecar'
-  }
-}
+import type { PayloadPluginMcpTestConfig } from './types'
 
 export const payloadPluginMcpTest =
   (pluginOptions: PayloadPluginMcpTestConfig) =>
   (config: Config): Config => {
-    if (!config.collections) {
-      config.collections = []
+    const options: Required<Omit<PayloadPluginMcpTestConfig, 'collections'>> & {
+      collections: PayloadPluginMcpTestConfig['collections']
+    } = {
+      apiKey: pluginOptions.apiKey || process.env.MCP_API_KEY || '',
+      collections: pluginOptions.collections || 'all',
+      defaultOperations: {
+        list: true,
+        get: true,
+        create: false,
+        update: false,
+        delete: false,
+        ...pluginOptions.defaultOperations,
+      },
     }
 
-    /**
-     * If the plugin is disabled, we still want to keep added collections/fields so the database schema is consistent which is important for migrations.
-     * If your plugin heavily modifies the database schema, you may want to remove this property.
-     */
-    if (pluginOptions.disabled) {
-      return config
+    // Validate API key
+    if (!options.apiKey) {
+      console.warn(
+        'PayloadCMS MCP Plugin: No API key provided. Set MCP_API_KEY environment variable for authentication.',
+      )
+    }
+
+    if (!config.collections) {
+      config.collections = []
     }
 
     if (!config.endpoints) {
@@ -63,14 +45,12 @@ export const payloadPluginMcpTest =
 
     config.endpoints.push({
       handler(req) {
-        // req is a PayloadRequest but to use the remote-mcp it needs to be a Request
-        // so we need to convert it to a Request
         const request = new Request(req.url || '', {
           method: req.method,
           headers: req.headers,
         })
 
-        return handler(req.payload)(request)
+        return handler(req.payload, config, options)(request)
       },
       method: 'get',
       path: '/plugin/mcp',
@@ -78,8 +58,6 @@ export const payloadPluginMcpTest =
 
     config.endpoints.push({
       handler(req) {
-        // req is a PayloadRequest but to use the remote-mcp it needs to be a Request
-        // so we need to convert it to a Request
         const request = new Request(req.url || '', {
           method: req.method,
           headers: req.headers,
@@ -89,7 +67,7 @@ export const payloadPluginMcpTest =
           ...(req.body ? { duplex: 'half' } : {}),
         })
 
-        return handler(req.payload)(request)
+        return handler(req.payload, config, options)(request)
       },
       method: 'post',
       path: '/plugin/mcp',

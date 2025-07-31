@@ -1,40 +1,43 @@
 import { createMcpHandler } from 'mcp-handler'
-import { BasePayload, CollectionSlug } from 'payload'
-import { z } from 'zod'
+import { BasePayload, Config } from 'payload'
+import { baseTools } from './tools/base-tools'
+import { defaultOperations, getCollectionsToExpose } from './utils/get-collections-to-expose'
+import { executeTool, generateToolDescriptors } from './utils/tool-generator'
+import type { PayloadPluginMcpTestConfig } from './types'
+import { z, ZodRawShape, ZodTypeAny } from 'zod'
 
-// import { startEmbeddedServer } from './server'
-export const handler = (payload: BasePayload) =>
+export const handler = (
+  payload: BasePayload,
+  config: Config,
+  options: PayloadPluginMcpTestConfig,
+) =>
   createMcpHandler(
     (server) => {
-      server.tool('get_collections', 'Get all collections from payload', {}, async () => {
-        const collections = Object.keys(payload.collections)
+      baseTools(server, payload)
 
-        return {
-          content: [{ type: 'text', text: `Collections: ${collections.join(', ')}` }], // TODO: return a list of collections
-        }
-      })
-
-      /**
-       * Get collection by name
-       */
-      server.tool(
-        'get_collection_by_name',
-        'Get collection by name',
-        {
-          name: z
-            .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
-            .describe('Name of the collection to get'),
-        },
-        async ({ name }) => {
-          const collection = await payload.find({
-            collection: name,
-          })
-
-          return {
-            content: [{ type: 'text', text: `Collection: ${collection.docs.length} documents` }],
-          }
-        },
+      const collectionsToExpose = getCollectionsToExpose(
+        config.collections || [],
+        options.collections || 'all',
+        options.defaultOperations || defaultOperations,
       )
+
+      // Generate tool descriptors from collections
+      const toolDescriptors = generateToolDescriptors(collectionsToExpose)
+
+      // map over toolDescriptors and add them to the server
+      toolDescriptors.forEach((toolDescriptor) => {
+        server.tool(
+          toolDescriptor.name,
+          toolDescriptor.description,
+          toolDescriptor.inputSchema as ZodRawShape,
+          async (input: z.objectOutputType<ZodRawShape, ZodTypeAny>) => {
+            const result = await executeTool(toolDescriptor, input, payload)
+            return {
+              content: [{ type: 'text', text: JSON.stringify(result) }],
+            }
+          },
+        )
+      })
     },
     {
       // Optional server options
