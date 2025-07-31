@@ -1,5 +1,5 @@
 import type { Config } from 'payload'
-import { handler } from './mcp'
+import { authHandler, handler } from './mcp'
 import type { PayloadPluginMcpTestConfig } from './types'
 
 export const payloadPluginMcpTest =
@@ -50,7 +50,7 @@ export const payloadPluginMcpTest =
           headers: req.headers,
         })
 
-        return handler(req.payload, config, options)(request)
+        return authHandler(handler(req.payload, config, options))(request)
       },
       method: 'get',
       path: '/plugin/mcp',
@@ -67,7 +67,7 @@ export const payloadPluginMcpTest =
           ...(req.body ? { duplex: 'half' } : {}),
         })
 
-        return handler(req.payload, config, options)(request)
+        return authHandler(handler(req.payload, config, options))(request)
       },
       method: 'post',
       path: '/plugin/mcp',

@@ -1,10 +1,11 @@
-import { createMcpHandler } from 'mcp-handler'
+import { createMcpHandler, withMcpAuth } from 'mcp-handler'
 import { BasePayload, Config } from 'payload'
 import { baseTools } from './tools/base-tools'
 import { defaultOperations, getCollectionsToExpose } from './utils/get-collections-to-expose'
 import { executeTool, generateToolDescriptors } from './utils/tool-generator'
 import type { PayloadPluginMcpTestConfig } from './types'
 import { z, ZodRawShape, ZodTypeAny } from 'zod'
+import { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
 
 export const handler = (
   payload: BasePayload,
@@ -50,3 +51,33 @@ export const handler = (
       verboseLogs: true,
     },
   )
+
+// Wrap your handler with authorization
+const verifyToken = async (req: Request, bearerToken?: string): Promise<AuthInfo | undefined> => {
+  if (!bearerToken) return undefined
+
+  // Replace this example with actual token verification logic
+  // Return an AuthInfo object if verification succeeds
+  // Otherwise, return undefined
+  const isValid = bearerToken === process.env.MCP_API_KEY
+
+  if (!isValid) return undefined
+
+  return {
+    token: bearerToken,
+    scopes: ['read:all'], // Add relevant scopes
+    clientId: 'mcp-plugin', // Add user/client identifier
+    extra: {
+      // Optional extra information
+      userId: 'mcp-plugin',
+    },
+  }
+}
+
+// Make authorization required
+export const authHandler = (_handler: ReturnType<typeof handler>) =>
+  withMcpAuth(_handler, verifyToken, {
+    required: true, // Make auth required for all requests
+    // requiredScopes: ['read:stuff'], // Optional: Require specific scopes
+    // resourceMetadataPath: '/.well-known/oauth-protected-resource', // Optional: Custom metadata path
+  })
