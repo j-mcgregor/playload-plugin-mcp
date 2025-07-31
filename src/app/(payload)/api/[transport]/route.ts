@@ -30,13 +30,15 @@ const handler = createMcpHandler(
   },
 )
 
-const GET = (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
-  console.log(params)
+const GET = async (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
+  const { transport } = await params
+  console.log(transport)
   return handler(req)
 }
 
-const POST = (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
-  console.log(params)
+const POST = async (req: Request, { params }: { params: Promise<{ transport: string }> }) => {
+  const { transport } = await params
+  console.log(transport)
   return handler(req)
 }
 
