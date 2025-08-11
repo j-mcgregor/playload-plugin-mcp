@@ -40,7 +40,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection to create document in'),
-      data: z.record(z.any()).describe('Document data to create'),
+      data: z.record(z.any(), z.any()).describe('Document data to create'),
     },
     async ({ collection, data }) => {
       const doc = await payload.create({
@@ -61,7 +61,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection to create documents in'),
-      data: z.array(z.record(z.any())).describe('Array of document data to create'),
+      data: z.array(z.record(z.any(), z.any())).describe('Array of document data to create'),
     },
     async ({ collection, data }) => {
       const docs = []
@@ -89,7 +89,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
       id: z.string().describe('Document ID to update'),
-      data: z.record(z.any()).describe('Document data to update'),
+      data: z.record(z.any(), z.any()).describe('Document data to update'),
     },
     async ({ collection, id, data }) => {
       const doc = await payload.update({
@@ -132,7 +132,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
       collection: z
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
-      where: z.record(z.any()).optional().describe('Query conditions'),
+      where: z.record(z.any(), z.any()).optional().describe('Query conditions'),
       limit: z.number().optional().describe('Maximum number of documents to return'),
       page: z.number().optional().describe('Page number for pagination'),
       sort: z.string().optional().describe('Field to sort by'),
@@ -186,7 +186,10 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection'),
       id: z.string().describe('Document ID to duplicate'),
-      overrides: z.record(z.any()).optional().describe('Fields to override in the duplicate'),
+      overrides: z
+        .record(z.any(), z.any())
+        .optional()
+        .describe('Fields to override in the duplicate'),
     },
     async ({ collection, id, overrides = {} }) => {
       const originalDoc = await payload.findByID({
@@ -218,7 +221,7 @@ export const baseTools = (server: McpServer, payload: BasePayload) => {
         .enum(Object.keys(payload.collections) as [CollectionSlug, ...CollectionSlug[]])
         .describe('Name of the collection to seed'),
       count: z.number().min(1).max(100).default(10).describe('Number of documents to create'),
-      template: z.record(z.any()).optional().describe('Template data for seeding'),
+      template: z.record(z.any(), z.any()).optional().describe('Template data for seeding'),
     },
     async ({ collection, count, template = {} }) => {
       const docs = []

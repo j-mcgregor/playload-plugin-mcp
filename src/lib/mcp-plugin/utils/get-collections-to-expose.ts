@@ -16,7 +16,6 @@ export function getCollectionsToExpose(
   collectionsOption: CollectionMcpConfig[] | 'all',
   defaultOperations: ToolOperations,
 ): CollectionAnalysis[] {
-  console.log(collectionsOption)
   if (collectionsOption === 'all') {
     // Return all collections with default operations, properly analyzed
     return allCollections.map((collection) =>

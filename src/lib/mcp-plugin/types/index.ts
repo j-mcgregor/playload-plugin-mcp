@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, CollectionSlug } from 'payload'
 
 // JSONSchema7 type definition (since json-schema package doesn't have proper types)
 export interface JSONSchema7 {
@@ -26,7 +26,7 @@ export interface ToolDescriptor {
   description: string
   inputSchema: JSONSchema7
   outputSchema: JSONSchema7
-  collection: string
+  collection: CollectionSlug | 'all'
   operation: ToolOperation
 }
 
@@ -86,7 +86,7 @@ export interface FieldAnalysis {
 }
 
 export interface CollectionAnalysis {
-  slug: string
+  slug: CollectionSlug | 'all'
   fields: FieldAnalysis[]
   hasUpload: boolean
   hasAuth: boolean

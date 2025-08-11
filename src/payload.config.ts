@@ -37,6 +37,13 @@ export default buildConfig({
     payloadPluginMcpTest({
       collections: 'all',
       apiKey: process.env.MCP_API_KEY || '',
+      defaultOperations: {
+        list: true,
+        get: true,
+        create: true,
+        update: true,
+        delete: true,
+      },
     }),
     // storage-adapter-placeholder
   ],

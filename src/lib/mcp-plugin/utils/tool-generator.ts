@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { BasePayload, CollectionConfig, Field, PayloadRequest } from 'payload'
+import type { BasePayload, CollectionConfig, CollectionSlug, Field } from 'payload'
 import type {
   ToolDescriptor,
   FieldAnalysis,
@@ -18,10 +18,17 @@ export function generateToolDescriptors(
   const descriptors: ToolDescriptor[] = []
 
   for (const analysis of collectionAnalyses) {
+    if (
+      analysis.slug.includes('migrations') ||
+      analysis.slug.includes('preferences') ||
+      analysis.slug.includes('locked')
+    ) {
+      continue
+    }
+
     // Get the complete collection analysis (populate fields if needed)
     const completeAnalysis =
       analysis.fields.length > 0 ? analysis : completeCollectionAnalysis(analysis)
-
     const operations = completeAnalysis.mcpOptions?.operations || {
       list: true,
       get: true,
@@ -88,6 +95,10 @@ export function analyzeCollection(
   // Recursively analyze fields (including nested fields in groups, rows, etc.)
   function analyzeFields(fields: Field[], prefix = ''): void {
     for (const field of fields) {
+      if (collection.slug.includes('migrations') || collection.slug.includes('preferences')) {
+        continue
+      }
+
       if ('name' in field && field.name) {
         const fieldName = prefix ? `${prefix}.${field.name}` : field.name
 
@@ -103,7 +114,7 @@ export function analyzeCollection(
       }
 
       // Handle nested fields
-      if (field.type === 'group' && 'fields' in field && field.fields) {
+      if (field.type === 'group' && 'fields' in field && field.fields && 'name' in field) {
         analyzeFields(field.fields, prefix ? `${prefix}.${field.name}` : field.name || '')
       } else if (field.type === 'row' && 'fields' in field && field.fields) {
         analyzeFields(field.fields, prefix)
@@ -122,7 +133,7 @@ export function analyzeCollection(
   analyzeFields(fields)
 
   return {
-    slug: collection.slug,
+    slug: collection.slug as CollectionSlug,
     fields: fieldAnalyses,
     hasUpload: Boolean(collection.upload),
     hasAuth: Boolean(collection.auth),
@@ -564,7 +575,7 @@ function createFieldSchema(field: FieldAnalysis): JSONSchema7 {
  * Execute a tool with the given input
  */
 export async function executeTool(
-  toolDescriptor: any,
+  toolDescriptor: ToolDescriptor,
   input: any,
   payload: BasePayload,
 ): Promise<any> {
@@ -572,6 +583,10 @@ export async function executeTool(
 
   if (!payload) {
     throw new Error('Payload instance not available')
+  }
+
+  if (collection === 'all') {
+    throw new Error('Collection must be specified')
   }
 
   switch (operation) {
@@ -593,6 +608,7 @@ export async function executeTool(
       })
 
     case 'create':
+      console.log({ collection, input })
       return await payload.create({
         collection,
         data: input.data,

@@ -1,10 +1,9 @@
 import { createMcpHandler, withMcpAuth } from 'mcp-handler'
 import { BasePayload, Config } from 'payload'
-import { baseTools } from './tools/base-tools'
+// import { baseTools } from './tools/base-tools'
 import { defaultOperations, getCollectionsToExpose } from './utils/get-collections-to-expose'
 import { executeTool, generateToolDescriptors } from './utils/tool-generator'
 import type { PayloadPluginMcpTestConfig } from './types'
-import { z, ZodRawShape, ZodTypeAny } from 'zod'
 import { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
 
 export const handler = (
@@ -14,7 +13,7 @@ export const handler = (
 ) =>
   createMcpHandler(
     (server) => {
-      baseTools(server, payload)
+      // baseTools(server, payload)
 
       const collectionsToExpose = getCollectionsToExpose(
         config.collections || [],
@@ -24,15 +23,42 @@ export const handler = (
 
       // Generate tool descriptors from collections
       const toolDescriptors = generateToolDescriptors(collectionsToExpose)
-
       // map over toolDescriptors and add them to the server
-      toolDescriptors.forEach((toolDescriptor) => {
+      toolDescriptors.forEach((tool) => {
+        if (tool.name === 'posts_create') {
+          console.log('tool', tool)
+        }
+
+        // server.registerTool(
+        //   tool.name,
+        //   {
+        //     title: tool.name,
+        //     description: tool.description,
+        //     inputSchema: tool.inputSchema,
+        //     outputSchema: tool.outputSchema,
+        //   },
+        //   async (input: unknown) => {
+        //     console.log('input', input)
+
+        //     const result = await executeTool(tool, input, payload)
+        //     return {
+        //       content: [{ type: 'text', text: JSON.stringify(result) }],
+        //     }
+        //   },
+        // )
         server.tool(
-          toolDescriptor.name,
-          toolDescriptor.description,
-          toolDescriptor.inputSchema as ZodRawShape,
-          async (input: z.objectOutputType<ZodRawShape, ZodTypeAny>) => {
-            const result = await executeTool(toolDescriptor, input, payload)
+          tool.name,
+          tool.description,
+          {
+            collection: tool.collection,
+            data: tool.outputSchema.properties,
+          },
+          async (input: unknown) => {
+            // console.log('inputSchema', tool.inputSchema)
+            // console.log('outputSchema', tool.outputSchema)
+            console.log('input', input)
+
+            const result = await executeTool(tool, input, payload)
             return {
               content: [{ type: 'text', text: JSON.stringify(result) }],
             }
